@@ -154,7 +154,7 @@ Delete the lab resource group when you are done. This removes the deployed resou
 az group delete --name rg-bicep-practice --yes --no-wait
 ```
 
-Key Vault soft-delete retention is seven days. Purge protection is intentionally off in this learning repository so the lab is easier to remove; do not copy that setting to production without considering recovery requirements.
+Key Vault soft-delete retention is seven days and purge protection is enabled. Azure does not permit purge protection to be disabled after it is enabled, so a deleted vault cannot be permanently purged during that retention period. This is safer, but means that recreating this lab with the same vault name must wait for the retention period or use a different name prefix.
 
 ## Reference documentation
 

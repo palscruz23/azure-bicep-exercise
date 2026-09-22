@@ -49,14 +49,19 @@ stages:
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
-                      echo "Registering required Azure resource providers..."
+                      echo "Checking required Azure resource providers..."
+                      missing_providers=()
                       for provider in Microsoft.KeyVault Microsoft.Network Microsoft.Storage; do
                         registration_state="$(az provider show --namespace "$provider" --query registrationState --output tsv)"
                         if [ "$registration_state" != "Registered" ]; then
-                          echo "Registering $provider..."
-                          az provider register --namespace "$provider" --wait
+                          missing_providers+=("$provider")
                         fi
                       done
+                      if [ "${#missing_providers[@]}" -gt 0 ]; then
+                        echo "ERROR: Required resource providers are not registered: ${missing_providers[*]}"
+                        echo "Ask a subscription Owner to register them once, then rerun this pipeline."
+                        exit 1
+                      fi
                       echo "Creating or updating resource group..."
                       az group create --name "$(resourceGroupName)" --location "$(location)"
                       echo "Running What-If preview..."

@@ -6,8 +6,8 @@ param namePrefix string
 
 param tags object
 
-@description('Whether purge protection is enabled. Keep false in this practice repository so cleanup is straightforward.')
-param enablePurgeProtection bool = false
+@description('Keeps deleted vaults protected from permanent removal during the soft-delete retention period. Azure cannot disable this after it has been enabled.')
+param enablePurgeProtection bool = true
 
 var keyVaultName = take(toLower('${namePrefix}kv${uniqueString(resourceGroup().id)}'), 24)
 

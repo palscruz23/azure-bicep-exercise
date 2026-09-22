@@ -44,6 +44,8 @@ Check registration when needed:
 az provider show --namespace Microsoft.App --query registrationState --output tsv
 ```
 
+Provider registration is a subscription-level action. The deployment service connection only checks that required providers are registered; it does not register them. If the check fails, ask a subscription Owner to register the provider in the Azure portal: **Subscriptions** → your subscription → **Resource providers** → select the namespace → **Register**.
+
 ## 3. Create the Azure Resource Manager service connection
 
 In Azure DevOps, open **Project settings** → **Service connections** → **New service connection** → **Azure Resource Manager**.
