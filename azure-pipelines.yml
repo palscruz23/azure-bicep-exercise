@@ -11,7 +11,7 @@ pr:
 variables:
   vmImage: ubuntu-latest
   # Define these in Azure DevOps (or a variable group); do not put subscription IDs or credentials here.
-  azureServiceConnection: Azure-Service-Connection
+  azureServiceConnection: azure-dev-connection
   resourceGroupName: rg-sample
   location: eastus
 
