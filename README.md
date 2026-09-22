@@ -103,6 +103,8 @@ Before running it, update the three pipeline variables (or replace them with a v
 
 Use Azure DevOps environment approvals on the `practice` environment before enabling automatic deployment in a shared subscription. The service connection must be authorized to create the resource group and deploy resources within it.
 
+For the full setup guide, see [Azure DevOps and service connection setup](docs/AZURE_DEVOPS_SETUP.md).
+
 ### Azure DevOps setup
 
 1. Create a project in [Azure DevOps](https://dev.azure.com), then create an empty Git repository. Push this folder to its `main` branch.
