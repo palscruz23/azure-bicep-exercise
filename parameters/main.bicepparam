@@ -10,7 +10,7 @@ param tags = {
 }
 
 // Set to true when you are ready to practise optional monitoring resources.
-param deployLogAnalytics = false
+param deployLogAnalytics = true
 
 // These resources cost money. Enable one at a time while practising.
 param deployContainerRegistry = false

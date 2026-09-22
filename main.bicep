@@ -15,16 +15,16 @@ param tags object = {
 }
 
 @description('Deploy an optional Log Analytics workspace for monitoring exercises.')
-param deployLogAnalytics bool = true
+param deployLogAnalytics bool = false
 
 @description('Deploy an Azure Container Registry. It is opt-in because registry storage incurs cost.')
-param deployContainerRegistry bool = true
+param deployContainerRegistry bool = false
 
 @description('Deploy a Container Apps environment and a public sample Container App.')
-param deployContainerApp bool = true
+param deployContainerApp bool = false
 
 @description('Deploy PostgreSQL Flexible Server and an application database.')
-param deployPostgres bool = true
+param deployPostgres bool = false
 
 @secure()
 @description('PostgreSQL administrator password. Supply only at deployment time when deployPostgres is true; never place it in a parameter file.')
