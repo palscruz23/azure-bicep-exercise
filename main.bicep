@@ -78,15 +78,28 @@ module containerRegistry 'modules/container-registry.bicep' = if (deployContaine
 module containerAppEnvironment 'modules/container-app-environment.bicep' = if (deployContainerApp) {
   name: 'container-app-environment-deployment'
   params: {
+    infrastructureSubnetId: network.outputs.containerAppsInfrastructureSubnetId
     location: location
     namePrefix: namePrefix
     tags: tags
   }
 }
 
-module containerApp 'modules/container-app.bicep' = if (deployContainerApp) {
-  name: 'container-app-deployment'
+module webContainerApp 'modules/container-app.bicep' = if (deployContainerApp) {
+  name: 'web-container-app-deployment'
   params: {
+    appSuffix: 'web'
+    containerAppEnvironmentId: containerAppEnvironment!.outputs.containerAppEnvironmentId
+    location: location
+    namePrefix: namePrefix
+    tags: tags
+  }
+}
+
+module apiContainerApp 'modules/container-app.bicep' = if (deployContainerApp) {
+  name: 'api-container-app-deployment'
+  params: {
+    appSuffix: 'api'
     containerAppEnvironmentId: containerAppEnvironment!.outputs.containerAppEnvironmentId
     location: location
     namePrefix: namePrefix
@@ -98,8 +111,10 @@ module postgresql 'modules/postgresql-flexible-server.bicep' = if (deployPostgre
   name: 'postgresql-deployment'
   params: {
     administratorPassword: postgresAdminPassword
+    delegatedSubnetResourceId: network.outputs.postgresqlDelegatedSubnetId
     location: location
     namePrefix: namePrefix
+    privateDnsZoneArmResourceId: network.outputs.postgresqlPrivateDnsZoneId
     tags: tags
   }
 }
@@ -109,5 +124,6 @@ output storageAccountId string = storage.outputs.storageAccountId
 output keyVaultId string = keyVault.outputs.keyVaultId
 output logAnalyticsWorkspaceId string = deployLogAnalytics ? logAnalytics!.outputs.workspaceId : ''
 output containerRegistryId string = deployContainerRegistry ? containerRegistry!.outputs.containerRegistryId : ''
-output containerAppUrl string = deployContainerApp ? containerApp!.outputs.applicationUrl : ''
+output webContainerAppUrl string = deployContainerApp ? webContainerApp!.outputs.applicationUrl : ''
+output apiContainerAppUrl string = deployContainerApp ? apiContainerApp!.outputs.applicationUrl : ''
 output postgresqlServerId string = deployPostgres ? postgresql!.outputs.postgresqlServerId : ''

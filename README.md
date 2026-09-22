@@ -6,13 +6,13 @@ A small, safe-by-default Azure Infrastructure as Code (IaC) lab. It uses a root 
 
 | Module | Azure resource | Learning focus |
 | --- | --- | --- |
-| `modules/network.bicep` | Virtual network and application subnet | address spaces and subnets |
+| `modules/network.bicep` | Virtual network, dedicated Container Apps and PostgreSQL subnets, and private DNS | network delegation and private name resolution |
 | `modules/storage-account.bicep` | Standard LRS StorageV2 account | global names and secure storage defaults |
 | `modules/key-vault.bicep` | Key Vault with Azure RBAC | secrets architecture without secret values in code |
 | `modules/log-analytics.bicep` | Optional Log Analytics workspace | conditional module deployment |
 | `modules/container-registry.bicep` | Azure Container Registry (Basic) | registry naming and disabled admin credentials |
 | `modules/container-app-environment.bicep` | Container Apps managed environment | container hosting foundation |
-| `modules/container-app.bicep` | Container App | managed identity, ingress, and scale-to-zero |
+| `modules/container-app.bicep` | Two Container Apps (`web` and `api`) | reusable module, managed identity, ingress, and scale-to-zero |
 | `modules/postgresql-flexible-server.bicep` | PostgreSQL Flexible Server and database | secure deployment-time parameters and database resources |
 
 `main.bicep` is the entry point. It passes common location, name-prefix, and tag values to each module and exposes useful outputs.
@@ -63,7 +63,7 @@ az deployment group create \
 
 The registry, Container App, and PostgreSQL resources are disabled in `parameters/main.bicepparam` to limit accidental cost. Set their corresponding `deploy...` parameter to `true` before previewing and deploying them.
 
-The Container App starts from a public Microsoft sample image; the registry module is deliberately separate. A follow-up exercise is to assign the app identity `AcrPull` on the registry, point `containerImage` at your pushed image, and configure the registry reference without using admin credentials.
+The `web` and `api` Container Apps start from the same public Microsoft sample image and share one **internal** managed environment in the practice VNet; the registry module is deliberately separate. A follow-up exercise is to assign each app identity `AcrPull` on the registry, point each app at a pushed image, and configure registry references without using admin credentials.
 
 PostgreSQL requires a password, which must never be added to `main.bicepparam` or committed. Set it in your shell and pass it only when enabling PostgreSQL:
 
@@ -78,7 +78,7 @@ az deployment group create \
   postgresAdminPassword="$POSTGRES_ADMIN_PASSWORD"
 ```
 
-For Azure Pipelines, store that value as a secret variable and pass it to the deployment command as `postgresAdminPassword`; do not log it. The initial database server exposes a public endpoint but defines no firewall rules, so it is not reachable until you intentionally add an access rule. A private-network PostgreSQL design requires a delegated subnet and private DNS zone, which is a useful next exercise.
+For Azure Pipelines, store that value as a secret variable and pass it to the deployment command as `postgresAdminPassword`; do not log it. PostgreSQL is injected into a dedicated delegated subnet in the same VNet as the internal Container Apps environment. It has no public endpoint, and its private DNS zone is linked to that VNet.
 
 Build locally (this also runs the configured Bicep linter):
 
@@ -92,7 +92,7 @@ az bicep build --file main.bicep --outdir ./dist
 
 The pipeline in `azure-pipelines.yml` has two stages:
 
-1. **Validate** runs `az bicep build`, including linter checks, for pull requests and pushes to `main`.
+1. **Validate** runs `az bicep build`, including linter checks, when the pipeline is started manually.
 2. **Deploy** runs only for `main`: it creates the practice resource group if needed, runs What-If, then deploys.
 
 Before running it, update the three pipeline variables (or replace them with a variable group):
@@ -102,6 +102,8 @@ Before running it, update the three pipeline variables (or replace them with a v
 - `location`: the resource group location.
 
 Use Azure DevOps environment approvals on the `practice` environment before enabling automatic deployment in a shared subscription. The service connection must be authorized to create the resource group and deploy resources within it.
+
+The pipeline has no push or pull-request trigger. Start it from **Pipelines** → your pipeline → **Run pipeline**. Select the `main` branch to run both validation and deployment; another branch runs validation only.
 
 For the full setup guide, see [Azure DevOps and service connection setup](docs/AZURE_DEVOPS_SETUP.md).
 
@@ -120,8 +122,8 @@ For the full setup guide, see [Azure DevOps and service connection setup](docs/A
    | `location` | `eastus` | Azure region for the resource group |
 
 6. Open **Pipelines** → **Environments**, create an environment named `practice`, then add an approval check if deployments need human confirmation. The YAML already targets this environment.
-7. Create a pull request to `main`. The **Validate** stage compiles and lints the Bicep templates. Merge it only after validation succeeds.
-8. A push to `main` runs the deployment stage: it creates the resource group when needed, runs What-If, waits for the `practice` environment approval if configured, and deploys.
+7. Open **Pipelines** → your pipeline → **Run pipeline**, select the `main` branch, and start the run. The **Validate** stage compiles and lints the Bicep templates.
+8. The **Deploy** stage then creates the resource group when needed, runs What-If, waits for the `practice` environment approval if configured, and deploys. Runs from a branch other than `main` validate only.
 
 To enable the optional PostgreSQL module in a pipeline, add `postgresAdminPassword` as a secret variable or secret variable-group entry. Pass it into the final `az deployment group create` command as `postgresAdminPassword="$POSTGRES_ADMIN_PASSWORD"`; never add it to `azure-pipelines.yml` or `parameters/main.bicepparam`.
 
@@ -133,7 +135,7 @@ To enable the optional PostgreSQL module in a pipeline, add `postgresAdminPasswo
 4. Add a private endpoint for the storage account, then change its networking design deliberately.
 5. Add diagnostic settings that send a resource's logs to the workspace.
 6. Push an image to the registry and let the Container App pull it through managed identity and the `AcrPull` role.
-7. Add PostgreSQL private networking with a delegated subnet and private DNS zone.
+7. Add network security groups that permit only the Container Apps subnet to reach PostgreSQL on TCP 5432.
 
 ## Security and cost notes
 
@@ -160,3 +162,5 @@ Key Vault soft-delete retention is seven days. Purge protection is intentionally
 - [Container Registry resource reference](https://learn.microsoft.com/azure/templates/microsoft.containerregistry/2025-04-01/registries)
 - [Container Apps resource reference](https://learn.microsoft.com/azure/templates/microsoft.app/2025-01-01/containerapps)
 - [PostgreSQL Flexible Server resource reference](https://learn.microsoft.com/azure/templates/microsoft.dbforpostgresql/2025-08-01/flexibleservers)
+- [Container Apps virtual network integration](https://learn.microsoft.com/azure/container-apps/vnet-custom)
+- [PostgreSQL Flexible Server private networking](https://learn.microsoft.com/azure/postgresql/flexible-server/concepts-networking-private)

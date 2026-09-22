@@ -1,6 +1,9 @@
 @description('Resource ID of the Container Apps managed environment.')
 param containerAppEnvironmentId string
 
+@description('Short unique label for this app instance, for example web or api.')
+param appSuffix string
+
 @description('Azure region for the Container App.')
 param location string
 
@@ -12,7 +15,7 @@ param tags object
 @description('Public image used for the starter application. Replace it with your own registry image in a later exercise.')
 param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 
-var containerAppName = take(toLower('${namePrefix}-app-${uniqueString(resourceGroup().id)}'), 32)
+var containerAppName = take(toLower('${namePrefix}-${appSuffix}-${uniqueString(resourceGroup().id)}'), 32)
 
 resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
   name: containerAppName

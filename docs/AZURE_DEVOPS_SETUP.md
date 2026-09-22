@@ -92,12 +92,12 @@ The parameter file controls optional resources. Keep the Container Registry, Con
 3. Open **Approvals and checks** for that environment.
 4. Add an approval check and choose the approvers.
 
-The deployment job already targets `environment: practice`. The pipeline validates Bicep on pull requests and deploys only after a change reaches `main` and the environment approval succeeds.
+The deployment job already targets `environment: practice`. The pipeline starts only when manually run from Azure DevOps. A run from `main` deploys after the environment approval succeeds.
 
 ## 7. First run
 
-1. Create a pull request to `main` and confirm the **Validate** stage passes.
-2. Merge the pull request.
+1. Open **Pipelines** → your pipeline → **Run pipeline**, select `main`, and start it.
+2. Confirm the **Validate** stage passes.
 3. Review the What-If output in the **Deploy** stage.
 4. Approve the `practice` environment deployment when prompted.
 5. Review deployment outputs in the Azure portal or with:

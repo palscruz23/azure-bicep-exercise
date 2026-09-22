@@ -9,8 +9,13 @@ param tags object
 @description('Address space for the practice virtual network.')
 param addressSpace string = '10.20.0.0/16'
 
-@description('Address prefix for the default application subnet.')
-param subnetAddressPrefix string = '10.20.1.0/24'
+@description('Dedicated subnet for Container Apps infrastructure. The default workload profile environment requires /27 or larger.')
+param containerAppsSubnetAddressPrefix string = '10.20.1.0/27'
+
+@description('Dedicated PostgreSQL subnet. PostgreSQL Flexible Server requires a delegated /28 or larger subnet.')
+param postgresqlSubnetAddressPrefix string = '10.20.2.0/28'
+
+var postgresqlPrivateDnsZoneName = '${namePrefix}.postgres.database.azure.com'
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   name: '${namePrefix}-vnet'
@@ -25,14 +30,57 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-05-01' = {
   }
 }
 
-resource appSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
+resource containerAppsInfrastructureSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
   parent: virtualNetwork
-  name: 'app'
+  name: 'container-apps-infrastructure'
   properties: {
-    addressPrefix: subnetAddressPrefix
-    privateEndpointNetworkPolicies: 'Disabled'
+    addressPrefix: containerAppsSubnetAddressPrefix
+    delegations: [
+      {
+        name: 'containerAppsDelegation'
+        properties: {
+          serviceName: 'Microsoft.App/environments'
+        }
+      }
+    ]
+  }
+}
+
+resource postgresqlDelegatedSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-05-01' = {
+  parent: virtualNetwork
+  name: 'postgresql'
+  properties: {
+    addressPrefix: postgresqlSubnetAddressPrefix
+    delegations: [
+      {
+        name: 'postgresqlDelegation'
+        properties: {
+          serviceName: 'Microsoft.DBforPostgreSQL/flexibleServers'
+        }
+      }
+    ]
+  }
+}
+
+resource postgresqlPrivateDnsZone 'Microsoft.Network/privateDnsZones@2018-09-01' = {
+  name: postgresqlPrivateDnsZoneName
+  location: 'global'
+  tags: tags
+}
+
+resource postgresqlPrivateDnsZoneVnetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2018-09-01' = {
+  parent: postgresqlPrivateDnsZone
+  name: '${virtualNetwork.name}-link'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: virtualNetwork.id
+    }
   }
 }
 
 output virtualNetworkId string = virtualNetwork.id
-output appSubnetId string = appSubnet.id
+output containerAppsInfrastructureSubnetId string = containerAppsInfrastructureSubnet.id
+output postgresqlDelegatedSubnetId string = postgresqlDelegatedSubnet.id
+output postgresqlPrivateDnsZoneId string = postgresqlPrivateDnsZone.id

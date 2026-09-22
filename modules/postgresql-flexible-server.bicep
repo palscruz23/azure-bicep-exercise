@@ -1,6 +1,9 @@
 @description('Azure region for PostgreSQL Flexible Server.')
 param location string
 
+@description('Resource ID of the dedicated subnet delegated to Microsoft.DBforPostgreSQL/flexibleServers.')
+param delegatedSubnetResourceId string
+
 @description('Letters and numbers only. Used to form the server name.')
 param namePrefix string
 
@@ -12,6 +15,9 @@ param administratorLogin string = 'pgadmin'
 @secure()
 @description('Administrator password. Provide this through a secret pipeline variable or a local shell environment variable.')
 param administratorPassword string
+
+@description('Resource ID of the PostgreSQL private DNS zone linked to the shared virtual network.')
+param privateDnsZoneArmResourceId string
 
 @description('Name of the application database to create.')
 param databaseName string = 'appdb'
@@ -37,7 +43,9 @@ resource postgresqlServer 'Microsoft.DBforPostgreSQL/flexibleServers@2025-08-01'
       mode: 'Disabled'
     }
     network: {
-      publicNetworkAccess: 'Enabled'
+      delegatedSubnetResourceId: delegatedSubnetResourceId
+      privateDnsZoneArmResourceId: privateDnsZoneArmResourceId
+      publicNetworkAccess: 'Disabled'
     }
     storage: {
       storageSizeGB: 32

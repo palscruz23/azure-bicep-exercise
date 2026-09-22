@@ -1,12 +1,6 @@
-trigger:
-  branches:
-    include:
-      - main
-
-pr:
-  branches:
-    include:
-      - main
+# Run only from Azure DevOps via the "Run pipeline" button.
+trigger: none
+pr: none
 
 variables:
   vmImage: ubuntu-latest
