@@ -16,6 +16,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   location: location
   tags: tags
   properties: {
+    tenantId: tenant().tenantId
     enablePurgeProtection: enablePurgeProtection
     enableRbacAuthorization: true
     enableSoftDelete: true

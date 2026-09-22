@@ -87,7 +87,7 @@ module containerAppEnvironment 'modules/container-app-environment.bicep' = if (d
 module containerApp 'modules/container-app.bicep' = if (deployContainerApp) {
   name: 'container-app-deployment'
   params: {
-    containerAppEnvironmentId: containerAppEnvironment.outputs.containerAppEnvironmentId
+    containerAppEnvironmentId: containerAppEnvironment!.outputs.containerAppEnvironmentId
     location: location
     namePrefix: namePrefix
     tags: tags
@@ -107,7 +107,7 @@ module postgresql 'modules/postgresql-flexible-server.bicep' = if (deployPostgre
 output virtualNetworkId string = network.outputs.virtualNetworkId
 output storageAccountId string = storage.outputs.storageAccountId
 output keyVaultId string = keyVault.outputs.keyVaultId
-output logAnalyticsWorkspaceId string = deployLogAnalytics ? logAnalytics.outputs.workspaceId : ''
-output containerRegistryId string = deployContainerRegistry ? containerRegistry.outputs.containerRegistryId : ''
-output containerAppUrl string = deployContainerApp ? containerApp.outputs.applicationUrl : ''
-output postgresqlServerId string = deployPostgres ? postgresql.outputs.postgresqlServerId : ''
+output logAnalyticsWorkspaceId string = deployLogAnalytics ? logAnalytics!.outputs.workspaceId : ''
+output containerRegistryId string = deployContainerRegistry ? containerRegistry!.outputs.containerRegistryId : ''
+output containerAppUrl string = deployContainerApp ? containerApp!.outputs.applicationUrl : ''
+output postgresqlServerId string = deployPostgres ? postgresql!.outputs.postgresqlServerId : ''

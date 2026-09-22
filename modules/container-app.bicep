@@ -37,7 +37,8 @@ resource containerApp 'Microsoft.App/containerApps@2025-01-01' = {
           name: 'web'
           image: containerImage
           resources: {
-            cpu: 0.25
+            // Bicep integer literals don't support decimals; preserve the minimum 0.25 vCPU value in emitted JSON.
+            cpu: json('0.25')
             memory: '0.5Gi'
           }
         }
