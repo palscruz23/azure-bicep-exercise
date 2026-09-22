@@ -1,0 +1,8 @@
+# Generated Bicep build artifacts
+*.json
+!*.parameters.json
+!bicepconfig.json
+
+# Local Azure CLI state and editor files
+.azure/
+.vscode/

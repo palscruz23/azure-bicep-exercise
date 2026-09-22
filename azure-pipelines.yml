@@ -1,0 +1,66 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
+
+variables:
+  vmImage: ubuntu-latest
+  # Define these in Azure DevOps (or a variable group); do not put subscription IDs or credentials here.
+  azureServiceConnection: Azure-Service-Connection
+  resourceGroupName: rg-bicep-practice
+  location: australiaeast
+
+stages:
+  - stage: Validate
+    displayName: Validate Bicep
+    jobs:
+      - job: Build
+        pool:
+          vmImage: $(vmImage)
+        steps:
+          - checkout: self
+          - task: AzureCLI@2
+            displayName: Build and lint Bicep
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az bicep build --file main.bicep --outdir $(Build.ArtifactStagingDirectory)
+
+  - stage: Deploy
+    displayName: What-if and deploy
+    dependsOn: Validate
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployInfrastructure
+        displayName: Deploy practice infrastructure
+        environment: practice
+        pool:
+          vmImage: $(vmImage)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: AzureCLI@2
+                  displayName: Create resource group, preview, and deploy
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az group create --name "$(resourceGroupName)" --location "$(location)"
+                      az deployment group what-if \
+                        --name "practice-$(Build.BuildId)" \
+                        --resource-group "$(resourceGroupName)" \
+                        --parameters parameters/main.bicepparam
+                      az deployment group create \
+                        --name "practice-$(Build.BuildId)" \
+                        --resource-group "$(resourceGroupName)" \
+                        --parameters parameters/main.bicepparam
