@@ -43,7 +43,7 @@ az account set --subscription '<subscription-id-or-name>'
 Edit `parameters/main.bicepparam` and give `namePrefix` a short, distinctive value using only letters and numbers. Then create a resource group and preview the change:
 
 ```bash
-az group create --name rg-bicep-practice --location australiaeast
+az group create --name rg-bicep-practice --location eastus
 az deployment group what-if \
   --name practice-preview \
   --resource-group rg-bicep-practice \
@@ -115,7 +115,7 @@ Use Azure DevOps environment approvals on the `practice` environment before enab
    | --- | --- | --- |
    | `azureServiceConnection` | `Azure-Service-Connection` | ARM service connection name from step 3 |
    | `resourceGroupName` | `rg-bicep-practice` | Resource group created or reused by deployment |
-   | `location` | `australiaeast` | Azure region for the resource group |
+   | `location` | `eastus` | Azure region for the resource group |
 
 6. Open **Pipelines** → **Environments**, create an environment named `practice`, then add an approval check if deployments need human confirmation. The YAML already targets this environment.
 7. Create a pull request to `main`. The **Validate** stage compiles and lints the Bicep templates. Merge it only after validation succeeds.
