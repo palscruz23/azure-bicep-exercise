@@ -55,11 +55,15 @@ stages:
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
+                      echo "Creating or updating resource group..."
                       az group create --name "$(resourceGroupName)" --location "$(location)"
+                      echo "Running What-If preview..."
                       az deployment group what-if \
                         --name "practice-$(Build.BuildId)" \
                         --resource-group "$(resourceGroupName)" \
+                        --validation-level Template \
                         --parameters parameters/main.bicepparam
+                      echo "What-If completed. Starting deployment..."
                       az deployment group create \
                         --name "practice-$(Build.BuildId)" \
                         --resource-group "$(resourceGroupName)" \
